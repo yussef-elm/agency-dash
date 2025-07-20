@@ -94,7 +94,7 @@ CENTERS = [
         "centerName": "Krasotka Beauty Center",
         "pipelineName": "Nouveau Pipeline",
         "calendarId": "C82RZoQRjVrjOdBnRvBW",
-        "businessId": ""
+        "businessId": "act_2166625163851201"
     },
     {
         "apiKey": st.secrets["MAYAE_BEAUTY_API_KEY"],
@@ -103,7 +103,7 @@ CENTERS = [
         "centerName": "Mayae Beauty Center",
         "pipelineName": "Nouveau Pipeline",
         "calendarId": "HZSSHX1WeZ2juD1vQk0b",
-        "businessId": ""
+        "businessId": "act_1803648590586295"
     }
 ]
 
