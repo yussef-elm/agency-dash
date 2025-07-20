@@ -1,0 +1,13 @@
+# Secrets and environment files
+.env
+.streamlit/secrets.toml
+config_old.py
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.vscode/
+.idea/
