@@ -123,4 +123,4 @@ elif page == "Meta Ads Metrics":
     meta_metrics.show(selected_centers, start_date, end_date, access_token)
 
 st.markdown("---")
-st.markdown("*Real-time performance data from HighLevel API*")
+st.markdown("© Sbitis Media 2025")
