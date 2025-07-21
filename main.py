@@ -67,9 +67,16 @@ st.set_page_config(page_title="Agency Clients Performance", page_icon="🚀", la
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.markdown("""
     <style>
-    /* Hide the Streamlit multipage navigation sidebar */
-    [data-testid="stSidebarNav"] {
-        display: none !important;
+    [data-testid="stSidebarNav"] { display: none !important; }
+    .sidebar-filters {
+        background: linear-gradient(90deg, #f8fafc 60%, #e3f6fd 100%);
+        border-radius: 14px;
+        padding: 20px 18px 12px 18px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 12px #b2ebf233, 0 1.5px 8px #b2ebf255;
+        border: 1.5px solid #e0f7fa;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -83,19 +90,60 @@ with col2:
 
 display_benchmark_legend()
 
-page = st.sidebar.selectbox("Select Page", [
-    "Performance Overview", "Benchmark Analysis", "City Comparison", 
-    "Detailed Metrics", "Stage Analysis", "Trend Analysis", 
-    "Created Leads Analysis", "Appointment Status Analysis","Meta Ads Metrics"
-])
+# --- Sidebar Filters ---
+with st.sidebar:
+    st.markdown('<div class="sidebar-filters">', unsafe_allow_html=True)
+    st.markdown("### 🔎 Filter Data")
 
-# Date and center selection common to all pages
-start_date = st.sidebar.date_input("Start Date", datetime.now().date() - timedelta(days=30))
-end_date = st.sidebar.date_input("End Date", datetime.now().date())
-cities = list(set([center['city'] for center in CENTERS]))
-selected_cities = st.sidebar.multiselect("Select Cities", cities, default=cities)
-center_names = [center['centerName'] for center in CENTERS if center['city'] in selected_cities]
-selected_centers = st.sidebar.multiselect("Select Centers", center_names, default=center_names)
+    # Navigation
+    page = st.selectbox("📄 Select Page", [
+        "Performance Overview", "Benchmark Analysis", "City Comparison", 
+        "Detailed Metrics", "Stage Analysis", "Trend Analysis", 
+        "Created Leads Analysis", "Appointment Status Analysis", "Meta Ads Metrics"
+    ])
+
+    st.markdown("#### 📅 Date Range")
+    date_col1, date_col2 = st.columns(2)
+    with date_col1:
+        start_date = st.date_input(
+            "Start",
+            value=datetime.now().date() - timedelta(days=30),
+            max_value=datetime.now().date(),
+            key="start_date"
+        )
+    with date_col2:
+        end_date = st.date_input(
+            "End",
+            value=datetime.now().date(),
+            min_value=start_date,
+            max_value=datetime.now().date(),
+            key="end_date"
+        )
+
+    st.markdown("#### 🏙️ Cities & Centers")
+    cities = sorted(set(center['city'] for center in CENTERS))
+    selected_cities = st.multiselect(
+        "Select Cities",
+        options=cities,
+        default=cities,
+        help="Filter centers by city"
+    )
+    center_names = [center['centerName'] for center in CENTERS if center['city'] in selected_cities]
+    selected_centers = st.multiselect(
+        "Select Centers",
+        options=center_names,
+        default=center_names,
+        help="Choose which centers to analyze"
+    )
+
+    st.markdown(
+        f"<div style='margin-top:10px; font-size:12px; color:#666;'>"
+        f"<b>Selected:</b> {len(selected_centers)} centers in {len(selected_cities)} cities"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+
 access_token = ACCESS_TOKEN
 
 if not selected_centers:

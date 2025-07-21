@@ -37,8 +37,12 @@ def create_colored_dataframe(df, metric_columns):
 
 def display_benchmark_legend():
     st.markdown("""
-    <div style="background-color: #f0f2f6; padding: 5px 10px; border-radius: 3px; margin-bottom: 10px; font-size: 11px;">
-        <strong>📊 Benchmarks:</strong> Confirmation: 🟢>60% 🟡40-60% 🔴<40% | Show Up: 🟢>50% 🟡35-50% 🔴<35% | Conversion: 🟢>50% 🟡30-50% 🔴<30% | Cancellation/No Show: 🟢<30% 🟡30-40% 🔴>40%
+    <div class="legend-bar">
+        <span style="font-weight:600;">📊 Benchmarks:</span>
+        <span style="margin-left:10px;">Confirmation: <span style="color:#43a047;">🟢&gt;60%</span> <span style="color:#fbc02d;">🟡40-60%</span> <span style="color:#e53935;">🔴&lt;40%</span></span> |
+        <span>Show Up: <span style="color:#43a047;">🟢&gt;50%</span> <span style="color:#fbc02d;">🟡35-50%</span> <span style="color:#e53935;">🔴&lt;35%</span></span> |
+        <span>Conversion: <span style="color:#43a047;">🟢&gt;50%</span> <span style="color:#fbc02d;">🟡30-50%</span> <span style="color:#e53935;">🔴&lt;30%</span></span> |
+        <span>Cancellation/No Show: <span style="color:#43a047;">🟢&lt;30%</span> <span style="color:#fbc02d;">🟡30-40%</span> <span style="color:#e53935;">🔴&gt;40%</span></span>
     </div>
     """, unsafe_allow_html=True)
 def display_kpi_cards(valid_results):
