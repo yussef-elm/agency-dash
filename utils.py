@@ -31,7 +31,7 @@ def canonical(name):
         return 'present'
     if 'non confirme' in n or 'message envoye' in n or 'message envoyé' in n:
         return 'non_confirme'
-    if 'rdv confirme' in n or 'rendez-vous confirme' in n or 'réponse positive' in n or 'reponse positive (rvd confirme)' in n:
+    if 'rdv confirme' in n or 'rendez-vous confirme' in n or 'réponse positive' in n or 'reponse positive (rdv confirme)' in n:
         return 'confirme'
     if 'sans reponse' in n or 'sans réponse' in n or 'without answer' in n or 'voice mail' in n:
         return 'sans_reponse'
