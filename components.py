@@ -37,14 +37,26 @@ def create_colored_dataframe(df, metric_columns):
 
 def display_benchmark_legend():
     st.markdown("""
-    <div class="legend-bar">
-        <span style="font-weight:600;">📊 Benchmarks:</span>
-        <span style="margin-left:10px;">Confirmation: <span style="color:#43a047;">🟢&gt;60%</span> <span style="color:#fbc02d;">🟡40-60%</span> <span style="color:#e53935;">🔴&lt;40%</span></span> |
-        <span>Show Up: <span style="color:#43a047;">🟢&gt;50%</span> <span style="color:#fbc02d;">🟡35-50%</span> <span style="color:#e53935;">🔴&lt;35%</span></span> |
-        <span>Conversion: <span style="color:#43a047;">🟢&gt;50%</span> <span style="color:#fbc02d;">🟡30-50%</span> <span style="color:#e53935;">🔴&lt;30%</span></span> |
-        <span>Cancellation/No Show: <span style="color:#43a047;">🟢&lt;30%</span> <span style="color:#fbc02d;">🟡30-40%</span> <span style="color:#e53935;">🔴&gt;40%</span></span>
+    <div style="
+        background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 13px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        white-space: nowrap;
+        overflow-x: auto;
+    ">
+        <span style="font-weight: 600; color: #2c3e50;">📊 Benchmarks:</span>
+        <span style="margin: 0 12px; color: #636e72;">Confirmation: <span style="color: #00b894;">🟢>60%</span> <span style="color: #fdcb6e;">🟡40-60%</span> <span style="color: #e17055;">🔴<40%</span></span>
+        <span style="margin: 0 12px; color: #636e72;">Show Up: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡35-50%</span> <span style="color: #e17055;">🔴<35%</span></span>
+        <span style="margin: 0 12px; color: #636e72;">Conversion: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡30-50%</span> <span style="color: #e17055;">🔴<30%</span></span>
+        <span style="color: #636e72;">Cancellation: <span style="color: #00b894;">🟢<30%</span> <span style="color: #fdcb6e;">🟡30-40%</span> <span style="color: #e17055;">🔴>40%</span></span>
     </div>
     """, unsafe_allow_html=True)
+    
 def display_kpi_cards(valid_results):
     """Display KPI cards with color coding"""
     total_rdv = sum([r['metrics']['totalRDVPlanifies'] for r in valid_results])

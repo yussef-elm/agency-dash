@@ -116,7 +116,6 @@ with st.sidebar:
             "End",
             value=datetime.now().date(),
             min_value=start_date,
-            max_value=datetime.now().date(),
             key="end_date"
         )
 
