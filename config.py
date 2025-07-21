@@ -104,6 +104,15 @@ CENTERS = [
         "pipelineName": "Nouveau Pipeline",
         "calendarId": "HZSSHX1WeZ2juD1vQk0b",
         "businessId": "act_1803648590586295"
+    },
+    {
+        "apiKey": st.secrets["SVEALTHY_API_KEY"],
+        "locationId": "ihjnCaPiXntJ1OZwY0B4",
+        "city": "Casablanca",
+        "centerName": "Svealthy",
+        "pipelineName": "Nouveau Pipeline",
+        "calendarId": "Fw0K4ezXHzSeOYACb7iq",
+        "businessId": "act_513437851427640"
     }
 ]
 

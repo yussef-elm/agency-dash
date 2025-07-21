@@ -1,4 +1,3 @@
-
 """
 Utility functions for data processing and formatting
 """
@@ -18,22 +17,26 @@ def canonical(name):
     """Convert stage name to canonical form"""
     n = norm(name)
 
-    if 'annule' in n:
+    # Exclude Database Reactivation explicitly
+    if 'database reactivation' in n:
+        return 'excluded'
+
+    if 'annule' in n or 'réponse négative' in n:
         return 'annule'
-    if 'pas venu' in n:
+    if 'pas venu' in n or 'pas venus' in n:
         return 'pas_venu'
-    if 'concretise' in n:
+    if 'concretise' in n or 'concrétisé' in n:
         return 'concretise'
-    if 'present' in n:
+    if 'present' in n or 'présenté cabinet' in n:
         return 'present'
-    if 'non confirme' in n or 'nouveau lead' in n:
+    if 'non confirme' in n or 'message envoye' in n or 'message envoyé' in n:
         return 'non_confirme'
-    if 'rdv confirme' in n or 'rendez-vous confirme' in n:
+    if 'rdv confirme' in n or 'rendez-vous confirme' in n or 'réponse positive' in n:
         return 'confirme'
-    if 'call back' in n or 'to call' in n:
-        return 'call_back'
-    if 'sans reponse' in n or 'without answer' in n or 'voice mail' in n:
+    if 'sans reponse' in n or 'sans réponse' in n or 'without answer' in n or 'voice mail' in n:
         return 'sans_reponse'
+
+    # Additional mappings if needed
     if 'unqualified' in n:
         return 'non_qualifie'
     if 'double' in n:
@@ -44,6 +47,7 @@ def canonical(name):
         return 'plus_interesse'
 
     return n
+
 def get_metric_color(value, metric_type):
     """Get color based on benchmark performance"""
     if metric_type not in BENCHMARKS:
