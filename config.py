@@ -90,7 +90,7 @@ CENTERS = [
     {
         "apiKey": st.secrets["KRASOTKA_BEAUTY_API_KEY"],
         "locationId": "bWGWs4ePd1Ma8TT1H33q",
-        "city": "Marrakesh",
+        "city": "Casablanca",
         "centerName": "Krasotka Beauty Center",
         "pipelineName": "Nouveau Pipeline",
         "calendarId": "C82RZoQRjVrjOdBnRvBW",
@@ -113,6 +113,15 @@ CENTERS = [
         "pipelineName": "Nouveau Pipeline",
         "calendarId": "Fw0K4ezXHzSeOYACb7iq",
         "businessId": "act_513437851427640"
+    },
+    {
+        "apiKey": st.secrets["HERMOSA_API_KEY"],
+        "locationId": "CU0oylzxs0owSRY5527f",
+        "city": "Laâyoune",
+        "centerName": "Hermosa",
+        "pipelineName": "Nouveau Pipeline",
+        "calendarId": "tCKnA5IyUJ6m4V7kgGFq",
+        "businessId": "act_2961653874016169"
     }
 ]
 
