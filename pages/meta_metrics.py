@@ -1,5 +1,5 @@
 """
-Meta Ads Metrics Dashboard with Enhanced Metrics
+Enhanced Meta Ads Metrics Dashboard with Guaranteed Metrics Display
 """
 import streamlit as st
 import pandas as pd
@@ -8,21 +8,65 @@ from plotly.subplots import make_subplots
 from api_client import fetch_meta_metrics_for_centers
 
 def format_currency(value):
-    return f"€{value:,.2f}"
+    """Format value as currency"""
+    try:
+        return f"€{float(value):,.2f}"
+    except (ValueError, TypeError):
+        return "€0.00"
 
 def format_percentage(value):
-    return f"{value:.2f}%"
+    """Format value as percentage"""
+    try:
+        return f"{float(value):.2f}%"
+    except (ValueError, TypeError):
+        return "0.00%"
 
 def format_number(value):
-    return f"{value:,}"
+    """Format value as number with commas"""
+    try:
+        return f"{int(value):,}"
+    except (ValueError, TypeError):
+        return "0"
+
+def ensure_all_columns(df):
+    """Ensure all expected columns exist in the DataFrame"""
+    expected_columns = {
+        'Center': '',
+        'City': '',
+        'Impressions': 0,
+        'Link Clicks': 0,
+        'Video 30s Views': 0,
+        'Leads': 0,
+        'Hook Rate': 0.0,
+        'Meta Conv. Rate': 0.0,
+        'CTR': 0.0,
+        'Spend': 0.0,
+        'CPM': 0.0,
+        'CPR': 0.0
+    }
+
+    for col, default_value in expected_columns.items():
+        if col not in df.columns:
+            df[col] = default_value
+
+    return df
 
 def create_all_centers_table(df):
     """Show all centers in a single sortable/filterable table with enhanced metrics"""
     st.subheader("📋 Complete Meta Ads Metrics - All Centers")
 
+    # Ensure all columns exist
+    df = ensure_all_columns(df)
+
+    # Debug info (remove in production)
+    st.write("🔍 **Debug Info:**")
+    st.write(f"DataFrame shape: {df.shape}")
+    st.write(f"Columns: {list(df.columns)}")
+
+    # Create display copy
     display_df = df.copy()
 
-    # Format columns for display
+    # Format columns for display (only in display_df)
     display_df['Spend'] = display_df['Spend'].apply(format_currency)
     display_df['CPM'] = display_df['CPM'].apply(format_currency)
     display_df['CPR'] = display_df['CPR'].apply(format_currency)
@@ -39,7 +83,9 @@ def create_all_centers_table(df):
         'Hook Rate', 'Meta Conv. Rate', 'CTR', 'Spend', 'CPM', 'CPR'
     ]
 
-    display_df = display_df[column_order]
+    # Ensure all columns in order exist
+    available_columns = [col for col in column_order if col in display_df.columns]
+    display_df = display_df[available_columns]
 
     st.dataframe(
         display_df, 
@@ -49,18 +95,22 @@ def create_all_centers_table(df):
 
 def create_enhanced_metrics_cards(df):
     """Enhanced metrics cards with new KPIs"""
-    # Calculate totals and averages
+    # Ensure all columns exist
+    df = ensure_all_columns(df)
+
+    # Calculate totals and averages (using numeric df)
     total_leads = df['Leads'].sum()
     total_spend = df['Spend'].sum()
     total_impressions = df['Impressions'].sum()
     total_clicks = df['Link Clicks'].sum()
     total_video_30s = df['Video 30s Views'].sum()
 
-    avg_cpm = df['CPM'].mean()
-    avg_ctr = df['CTR'].mean()
-    avg_cpr = df['CPR'].mean()
-    avg_hook_rate = df['Hook Rate'].mean()
-    avg_meta_conv_rate = df['Meta Conv. Rate'].mean()
+    # Calculate averages safely
+    avg_cpm = df['CPM'].mean() if len(df) > 0 else 0
+    avg_ctr = df['CTR'].mean() if len(df) > 0 else 0
+    avg_cpr = df['CPR'].mean() if len(df) > 0 else 0
+    avg_hook_rate = df['Hook Rate'].mean() if len(df) > 0 else 0
+    avg_meta_conv_rate = df['Meta Conv. Rate'].mean() if len(df) > 0 else 0
 
     # Overall rates
     overall_hook_rate = (total_video_30s / total_impressions * 100) if total_impressions > 0 else 0
@@ -99,6 +149,10 @@ def create_enhanced_city_comparison_chart(df):
     """Enhanced city comparison with new metrics"""
     st.subheader("📍 Performance by City")
 
+    # Ensure all columns exist
+    df = ensure_all_columns(df)
+
+    # Group by city (using numeric df)
     city_summary = df.groupby('City').agg({
         'CPM': 'mean',
         'CPR': 'mean',
@@ -193,8 +247,11 @@ def create_performance_insights(df):
     """Create performance insights section"""
     st.subheader("💡 Performance Insights")
 
+    # Ensure all columns exist
+    df = ensure_all_columns(df)
+
     if len(df) >= 2:
-        # Find best performers
+        # Find best performers (using numeric df)
         best_hook_rate = df.loc[df['Hook Rate'].idxmax()]
         best_meta_conv = df.loc[df['Meta Conv. Rate'].idxmax()]
         best_ctr = df.loc[df['CTR'].idxmax()]
@@ -207,9 +264,6 @@ def create_performance_insights(df):
         df_with_cpl = df.copy()
         df_with_cpl['CPL'] = df_with_cpl['Spend'] / df_with_cpl['Leads']
         df_with_cpl = df_with_cpl[df_with_cpl['CPL'] != float('inf')]  # Remove infinite values
-
-        if len(df_with_cpl) > 0:
-            best_cpl = df_with_cpl.loc[df_with_cpl['CPL'].idxmin()]
 
         col1, col2 = st.columns(2)
 
@@ -224,21 +278,34 @@ def create_performance_insights(df):
             st.info(f"📊 **Lowest CPM**: {best_cpm['Center']} (€{best_cpm['CPM']:.2f})")
             st.info(f"💵 **Lowest CPR**: {best_cpr['Center']} (€{best_cpr['CPR']:.2f})")
             if len(df_with_cpl) > 0:
+                best_cpl = df_with_cpl.loc[df_with_cpl['CPL'].idxmin()]
                 st.info(f"🎯 **Lowest CPL**: {best_cpl['Center']} (€{best_cpl['CPL']:.2f})")
+    else:
+        st.info("Need at least 2 centers to show performance insights.")
 
 def create_detailed_tables(df):
     """Enhanced detailed tables by city with new metrics"""
     st.subheader("📋 Detailed Metrics by City")
+
+    # Ensure all columns exist
+    df = ensure_all_columns(df)
 
     for city in sorted(df['City'].unique()):
         with st.expander(f"📍 {city} Centers", expanded=False):
             city_df = df[df['City'] == city].copy()
 
             # Create display dataframe with formatted values
-            display_df = city_df[[
+            display_columns = [
                 'Center', 'Impressions', 'Link Clicks', 'Video 30s Views', 'Leads',
                 'Hook Rate', 'Meta Conv. Rate', 'CTR', 'Spend', 'CPM', 'CPR'
-            ]].copy()
+            ]
+
+            # Ensure all display columns exist
+            for col in display_columns:
+                if col not in city_df.columns:
+                    city_df[col] = 0 if col != 'Center' else ''
+
+            display_df = city_df[display_columns].copy()
 
             # Format for display
             display_df['Impressions'] = display_df['Impressions'].apply(format_number)
@@ -253,7 +320,7 @@ def create_detailed_tables(df):
 
             st.dataframe(display_df, use_container_width=True)
 
-            # City summary metrics
+            # City summary metrics (using numeric city_df)
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
                 st.metric("Total Impressions", format_number(city_df['Impressions'].sum()))
@@ -305,15 +372,16 @@ def show(selected_centers, start_date, end_date, access_token):
             errors.append(f"{center_data['centerName']}: {metrics['error']}")
             continue
 
+        # Ensure all metrics are present with defaults
         summary_rows.append({
             'Center': center_data['centerName'],
             'City': center_data['city'],
-            'Leads': metrics['leads'],
-            'Spend': metrics['spend'],
-            'CPM': metrics['cpm'],
-            'CTR': metrics['ctr'],
-            'CPR': metrics['cpr'],
-            # Enhanced metrics
+            'Leads': metrics.get('leads', 0),
+            'Spend': metrics.get('spend', 0.0),
+            'CPM': metrics.get('cpm', 0.0),
+            'CTR': metrics.get('ctr', 0.0),
+            'CPR': metrics.get('cpr', 0.0),
+            # Enhanced metrics with guaranteed defaults
             'Impressions': metrics.get('impressions', 0),
             'Link Clicks': metrics.get('inline_link_clicks', 0),
             'Video 30s Views': metrics.get('video_30_sec_watched', 0),
@@ -331,7 +399,11 @@ def show(selected_centers, start_date, end_date, access_token):
         st.error("No valid Meta Ads data retrieved.")
         return
 
+    # Create DataFrame
     df = pd.DataFrame(summary_rows)
+
+    # Ensure all columns exist
+    df = ensure_all_columns(df)
 
     # Header information
     st.markdown("---")
@@ -368,7 +440,7 @@ def show(selected_centers, start_date, end_date, access_token):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # Complete dataset
+        # Complete dataset (use numeric df for export)
         csv_complete = df.to_csv(index=False)
         st.download_button(
             label="📄 Download Complete Report (CSV)",
@@ -380,7 +452,8 @@ def show(selected_centers, start_date, end_date, access_token):
     with col2:
         # Cost-focused data
         cost_columns = ['Center', 'City', 'Spend', 'CPM', 'CPR', 'Leads']
-        cost_df = df[cost_columns]
+        available_cost_columns = [col for col in cost_columns if col in df.columns]
+        cost_df = df[available_cost_columns]
         cost_csv = cost_df.to_csv(index=False)
         st.download_button(
             label="💰 Download Cost Metrics (CSV)",
@@ -392,7 +465,8 @@ def show(selected_centers, start_date, end_date, access_token):
     with col3:
         # Engagement-focused data
         engagement_columns = ['Center', 'City', 'Impressions', 'Link Clicks', 'Video 30s Views', 'Hook Rate', 'Meta Conv. Rate', 'CTR']
-        engagement_df = df[engagement_columns]
+        available_engagement_columns = [col for col in engagement_columns if col in df.columns]
+        engagement_df = df[available_engagement_columns]
         engagement_csv = engagement_df.to_csv(index=False)
         st.download_button(
             label="📈 Download Engagement Metrics (CSV)",
@@ -404,6 +478,8 @@ def show(selected_centers, start_date, end_date, access_token):
     # Summary statistics
     with st.expander("📊 Summary Statistics", expanded=False):
         st.markdown("#### 📈 Overall Performance")
+
+        # Use numeric df for calculations
         total_impressions = df['Impressions'].sum()
         total_clicks = df['Link Clicks'].sum()
         total_video_30s = df['Video 30s Views'].sum()

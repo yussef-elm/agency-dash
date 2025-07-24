@@ -1,4 +1,3 @@
-
 import streamlit as st
 import io
 import pandas as pd
@@ -9,12 +8,15 @@ from charts import create_performance_bar_chart, create_performance_radar_chart
 def show(selected_centers, start_date, end_date):
     with st.spinner("Fetching created leads data..."):
         results = fetch_centers_data_created(start_date.isoformat(), end_date.isoformat(), selected_centers)
+
     valid_results = [r for r in results if 'error' not in r]
     error_results = [r for r in results if 'error' in r]
+
     if error_results:
         st.error(f"Errors occurred for {len(error_results)} centers:")
         for error in error_results:
             st.error(f"- {error['centerName']}: {error['error']}")
+
     if not valid_results:
         st.error("No valid data retrieved for created leads. Please check your API keys and try again.")
         st.stop()
@@ -42,6 +44,11 @@ def show(selected_centers, start_date, end_date):
 
     st.subheader("📋 Detailed Created Leads Metrics")
     df = display_detailed_metrics_table(valid_results)
+
+    # Ensure 'sans_reponse' and 'non_qualifie' columns exist with default 0
+    for col in ['sans_reponse', 'non_qualifie']:
+        if col not in df.columns:
+            df[col] = 0
 
     st.subheader("📤 Export Created Leads Data")
     col1, col2 = st.columns(2)

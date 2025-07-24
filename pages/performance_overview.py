@@ -7,6 +7,33 @@ from api_client import (
 )
 from components import display_kpi_cards
 from charts import create_performance_bar_chart, create_performance_radar_chart
+import pandas as pd
+
+# --- Utility functions for formatting and column management ---
+
+def format_currency(value):
+    try:
+        return f"€{float(value):,.2f}"
+    except Exception:
+        return "€0.00"
+
+def format_percentage(value):
+    try:
+        return f"{float(value):.2f}%"
+    except Exception:
+        return "0.00%"
+
+def format_number(value):
+    try:
+        return f"{int(value):,}"
+    except Exception:
+        return "0"
+
+def ensure_all_columns(df, expected_columns):
+    for col, default in expected_columns.items():
+        if col not in df.columns:
+            df[col] = default
+    return df
 
 def show(selected_centers, start_date, end_date, access_token=None):
     with st.spinner("Fetching performance data..."):
@@ -62,120 +89,144 @@ def show(selected_centers, start_date, end_date, access_token=None):
                     # First row of metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("Total Spend", f"€{summary['total_spend']:.2f}")
+                        st.metric("Total Spend", format_currency(summary['total_spend']))
                     with col2:
-                        st.metric("Total Impressions", f"{summary['total_impressions']:,}")
+                        st.metric("Total Impressions", format_number(summary['total_impressions']))
                     with col3:
-                        st.metric("Total Clicks", f"{summary['total_clicks']:,}")
+                        st.metric("Total Clicks", format_number(summary['total_clicks']))
                     with col4:
-                        st.metric("Total Meta Leads", f"{summary['total_meta_leads']:,}")
+                        st.metric("Total Meta Leads", format_number(summary['total_meta_leads']))
 
                     # Second row of metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("Avg CPA", f"€{summary['avg_cpa']:.2f}")
+                        st.metric("Avg CPA", format_currency(summary['avg_cpa']))
                     with col2:
-                        st.metric("Avg CPL", f"€{summary['avg_cpl']:.2f}")
+                        st.metric("Avg CPL", format_currency(summary['avg_cpl']))
                     with col3:
-                        st.metric("Overall Hook Rate", f"{summary['overall_hook_rate']:.2f}%")
+                        st.metric("Overall Hook Rate", format_percentage(summary['overall_hook_rate']))
                     with col4:
-                        st.metric("Overall Meta Conv. Rate", f"{summary['overall_meta_conversion_rate']:.2f}%")
+                        st.metric("Overall Meta Conv. Rate", format_percentage(summary['overall_meta_conversion_rate']))
 
                     # Third row of metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("Lead→RDV Rate", f"{summary['overall_lead_to_appointment']:.1f}%")
+                        st.metric("Lead→RDV Rate", format_percentage(summary['overall_lead_to_appointment']))
                     with col2:
-                        st.metric("Lead→Sale Rate", f"{summary['overall_lead_to_sale']:.1f}%")
+                        st.metric("Lead→Sale Rate", format_percentage(summary['overall_lead_to_sale']))
                     with col3:
-                        st.metric("Avg CPM", f"€{summary['avg_cpm']:.2f}")
+                        st.metric("Avg CPM", format_currency(summary['avg_cpm']))
                     with col4:
-                        st.metric("Avg CTR", f"{summary['avg_ctr']:.2f}%")
+                        st.metric("Avg CTR", format_percentage(summary['avg_ctr']))
 
                 # Display detailed table with enhanced columns
                 st.markdown("#### 📋 Detailed Performance Table")
                 display_data = format_combined_data_for_display(combined_data)
 
-                if display_data:
-                    # Create tabs for different views of the data
-                    tab1, tab2, tab3 = st.tabs(["📊 Complete View", "💰 Cost Metrics", "📈 Conversion Metrics"])
+                # --- Ensure all columns are present, including sans_reponse and non_qualifie ---
+                expected_columns = {
+                    'Centre': '',
+                    'Ville': '',
+                    'Dépense (€)': 0.0,
+                    'CPL (€)': 0.0,
+                    'CPA - Coût/Concrétisation (€)': 0.0,
+                    'CPR (€)': 0.0,
+                    'CPM (€)': 0.0,
+                    'Leads Meta': 0,
+                    'Concrétisé': 0,
+                    'Impressions': 0,
+                    'Clicks': 0,
+                    'Video 30s Views': 0,
+                    'Hook Rate (%)': 0.0,
+                    'Meta Conv. Rate (%)': 0.0,
+                    'CTR (%)': 0.0,
+                    'Lead→RDV (%)': 0.0,
+                    'Lead→Sale (%)': 0.0,
+                    'Taux Confirmation (%)': 0.0,
+                    'Taux Conversion (%)': 0.0,
+                    'Sans Réponse': 0,
+                    'Non Qualifié': 0
+                }
+                # Convert to DataFrame and ensure all columns
+                df = pd.DataFrame(display_data)
+                df = ensure_all_columns(df, expected_columns)
 
-                    with tab1:
-                        st.markdown("**Complete performance data with all metrics**")
-                        st.dataframe(
-                            display_data, 
-                            use_container_width=True,
-                            hide_index=True,
-                            height=400
-                        )
+                # Format for display
+                display_df = df.copy()
+                for col in ['Dépense (€)', 'CPL (€)', 'CPA - Coût/Concrétisation (€)', 'CPR (€)', 'CPM (€)']:
+                    display_df[col] = display_df[col].apply(format_currency)
+                for col in ['Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)', 'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)']:
+                    display_df[col] = display_df[col].apply(format_percentage)
+                for col in ['Impressions', 'Clicks', 'Video 30s Views', 'Leads Meta', 'Concrétisé', 'Sans Réponse', 'Non Qualifié']:
+                    display_df[col] = display_df[col].apply(format_number)
 
-                    with tab2:
-                        # Cost-focused view
-                        cost_columns = ['Centre', 'Ville', 'Dépense (€)', 'CPL (€)', 'CPA - Coût/Concrétisation (€)', 
-                                      'CPR (€)', 'CPM (€)', 'Leads Meta', 'Concrétisé']
-                        cost_data = [{k: v for k, v in row.items() if k in cost_columns} for row in display_data]
-                        st.dataframe(cost_data, use_container_width=True, hide_index=True)
+                # Create tabs for different views of the data
+                tab1, tab2, tab3 = st.tabs(["📊 Complete View", "💰 Cost Metrics", "📈 Conversion Metrics"])
 
-                    with tab3:
-                        # Conversion-focused view
-                        conv_columns = ['Centre', 'Ville', 'Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)',
-                                      'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)']
-                        conv_data = [{k: v for k, v in row.items() if k in conv_columns} for row in display_data]
-                        st.dataframe(conv_data, use_container_width=True, hide_index=True)
+                with tab1:
+                    st.markdown("**Complete performance data with all metrics**")
+                    st.dataframe(
+                        display_df, 
+                        use_container_width=True,
+                        hide_index=True,
+                        height=400
+                    )
 
-                    # Enhanced download options
-                    st.markdown("#### 📥 Download Options")
-                    col1, col2, col3 = st.columns(3)
+                with tab2:
+                    # Cost-focused view
+                    cost_columns = ['Centre', 'Ville', 'Dépense (€)', 'CPL (€)', 'CPA - Coût/Concrétisation (€)', 
+                                  'CPR (€)', 'CPM (€)', 'Leads Meta', 'Concrétisé', 'Sans Réponse', 'Non Qualifié']
+                    st.dataframe(display_df[cost_columns], use_container_width=True, hide_index=True)
 
-                    import pandas as pd
-                    df = pd.DataFrame(display_data)
+                with tab3:
+                    # Conversion-focused view
+                    conv_columns = ['Centre', 'Ville', 'Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)',
+                                  'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)', 'Sans Réponse', 'Non Qualifié']
+                    st.dataframe(display_df[conv_columns], use_container_width=True, hide_index=True)
 
-                    with col1:
-                        csv = df.to_csv(index=False)
-                        st.download_button(
-                            label="📄 Download Complete Data (CSV)",
-                            data=csv,
-                            file_name=f"complete_performance_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv",
-                            mime="text/csv"
-                        )
+                # Enhanced download options
+                st.markdown("#### 📥 Download Options")
+                col1, col2, col3 = st.columns(3)
 
-                    with col2:
-                        # Cost metrics only
-                        cost_df = df[['Centre', 'Ville', 'Dépense (€)', 'CPL (€)', 'CPA - Coût/Concrétisation (€)', 
-                                    'CPR (€)', 'CPM (€)', 'Leads Meta', 'Concrétisé']]
-                        cost_csv = cost_df.to_csv(index=False)
-                        st.download_button(
-                            label="💰 Download Cost Metrics (CSV)",
-                            data=cost_csv,
-                            file_name=f"cost_metrics_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv",
-                            mime="text/csv"
-                        )
+                with col1:
+                    csv = df.to_csv(index=False)
+                    st.download_button(
+                        label="📄 Download Complete Data (CSV)",
+                        data=csv,
+                        file_name=f"complete_performance_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv",
+                        mime="text/csv"
+                    )
 
-                    with col3:
-                        # Conversion metrics only
-                        conv_df = df[['Centre', 'Ville', 'Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)',
-                                    'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)']]
-                        conv_csv = conv_df.to_csv(index=False)
-                        st.download_button(
-                            label="📈 Download Conversion Metrics (CSV)",
-                            data=conv_csv,
-                            file_name=f"conversion_metrics_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv",
-                            mime="text/csv"
-                        )
+                with col2:
+                    # Cost metrics only
+                    cost_csv = df[cost_columns].to_csv(index=False)
+                    st.download_button(
+                        label="💰 Download Cost Metrics (CSV)",
+                        data=cost_csv,
+                        file_name=f"cost_metrics_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv",
+                        mime="text/csv"
+                    )
 
-                else:
-                    st.warning("No combined data available for the selected centers and date range.")
+                with col3:
+                    # Conversion metrics only
+                    conv_csv = df[conv_columns].to_csv(index=False)
+                    st.download_button(
+                        label="📈 Download Conversion Metrics (CSV)",
+                        data=conv_csv,
+                        file_name=f"conversion_metrics_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.csv",
+                        mime="text/csv"
+                    )
 
                 # Enhanced error reporting
-                errors = [c for c in combined_data if c['has_meta_error'] or c['has_created_error']]
+                errors = [c for c in combined_data if c.get('has_meta_error') or c.get('has_created_error')]
                 if errors:
                     with st.expander(f"⚠️ {len(errors)} centers have data issues", expanded=False):
                         for error_center in errors:
                             st.markdown(f"**{error_center['centerName']} ({error_center['city']})**")
-                            if error_center['has_meta_error']:
-                                st.error(f"📱 Meta Ads Error: {error_center['meta_error']}")
-                            if error_center['has_created_error']:
-                                st.error(f"🏢 HighLevel Error: {error_center['created_error']}")
+                            if error_center.get('has_meta_error'):
+                                st.error(f"📱 Meta Ads Error: {error_center.get('meta_error', '')}")
+                            if error_center.get('has_created_error'):
+                                st.error(f"🏢 HighLevel Error: {error_center.get('created_error', '')}")
                             st.markdown("---")
 
                 # Performance insights
@@ -183,30 +234,30 @@ def show(selected_centers, start_date, end_date, access_token=None):
                     st.markdown("#### 💡 Performance Insights")
 
                     # Find best and worst performers
-                    valid_centers = [c for c in combined_data if not c['has_meta_error'] and not c['has_created_error']]
+                    valid_centers = [c for c in combined_data if not c.get('has_meta_error') and not c.get('has_created_error')]
 
                     if len(valid_centers) >= 2:
                         # Best CPA
-                        best_cpa = min(valid_centers, key=lambda x: x['cpa'] if x['cpa'] > 0 else float('inf'))
-                        worst_cpa = max(valid_centers, key=lambda x: x['cpa'])
+                        best_cpa = min(valid_centers, key=lambda x: x.get('cpa', float('inf')) if x.get('cpa', 0) > 0 else float('inf'))
+                        worst_cpa = max(valid_centers, key=lambda x: x.get('cpa', 0))
 
                         # Best conversion rates
-                        best_hook = max(valid_centers, key=lambda x: x['hook_rate'])
-                        best_meta_conv = max(valid_centers, key=lambda x: x['meta_conversion_rate'])
-                        best_lead_to_sale = max(valid_centers, key=lambda x: x['lead_to_sale_rate'])
+                        best_hook = max(valid_centers, key=lambda x: x.get('hook_rate', 0))
+                        best_meta_conv = max(valid_centers, key=lambda x: x.get('meta_conversion_rate', 0))
+                        best_lead_to_sale = max(valid_centers, key=lambda x: x.get('lead_to_sale_rate', 0))
 
                         col1, col2 = st.columns(2)
 
                         with col1:
-                            st.success(f"🏆 **Best CPA**: {best_cpa['centerName']} (€{best_cpa['cpa']:.2f})")
-                            st.success(f"🎯 **Best Hook Rate**: {best_hook['centerName']} ({best_hook['hook_rate']:.2f}%)")
-                            st.success(f"📈 **Best Meta Conv. Rate**: {best_meta_conv['centerName']} ({best_meta_conv['meta_conversion_rate']:.2f}%)")
+                            st.success(f"🏆 **Best CPA**: {best_cpa['centerName']} (€{best_cpa.get('cpa', 0):.2f})")
+                            st.success(f"🎯 **Best Hook Rate**: {best_hook['centerName']} ({best_hook.get('hook_rate', 0):.2f}%)")
+                            st.success(f"📈 **Best Meta Conv. Rate**: {best_meta_conv['centerName']} ({best_meta_conv.get('meta_conversion_rate', 0):.2f}%)")
 
                         with col2:
-                            if worst_cpa['cpa'] > 0:
-                                st.warning(f"⚠️ **Highest CPA**: {worst_cpa['centerName']} (€{worst_cpa['cpa']:.2f})")
-                            st.info(f"🎖️ **Best Lead→Sale**: {best_lead_to_sale['centerName']} ({best_lead_to_sale['lead_to_sale_rate']:.2f}%)")
-                            st.info(f"💰 **Total Investment**: €{summary['total_spend']:.2f} across {summary['total_centers']} centers")
+                            if worst_cpa.get('cpa', 0) > 0:
+                                st.warning(f"⚠️ **Highest CPA**: {worst_cpa['centerName']} (€{worst_cpa.get('cpa', 0):.2f})")
+                            st.info(f"🎖️ **Best Lead→Sale**: {best_lead_to_sale['centerName']} ({best_lead_to_sale.get('lead_to_sale_rate', 0):.2f}%)")
+                            st.info(f"💰 **Total Investment**: {format_currency(summary['total_spend'])} across {summary['total_centers']} centers")
 
             except Exception as e:
                 st.error(f"Error fetching combined data: {str(e)}")
