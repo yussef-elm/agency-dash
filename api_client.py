@@ -235,131 +235,6 @@ def fetch_centers_data_created(start_date_str, end_date_str, selected_center_nam
 
     return _execute_async_tasks(create_tasks)
 
-# APPOINTMENTS FUNCTIONS
-async def fetch_appointments_from_calendar(session, center, calendar_id, start_date, end_date):
-    """Fetch appointments from a single calendar within date range"""
-    try:
-        start_epoch = int(datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc).timestamp() * 1000)
-        end_epoch = int(datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc).timestamp() * 1000)
-
-        url = f"https://rest.gohighlevel.com/v1/appointments/?startDate={start_epoch}&endDate={end_epoch}&calendarId={calendar_id}&includeAll=true"
-
-        headers = {
-            'Authorization': f'Bearer {center["apiKey"]}',
-            'Location-Id': center["locationId"]
-        }
-
-        async with session.get(url, headers=headers) as response:
-            if response.status != 200:
-                return []
-            data = await response.json()
-            return data.get('appointments', [])
-    except Exception as e:
-        return []
-
-def get_date_from_iso(iso_string):
-    return iso_string.split('T')[0] if iso_string else 'unknown'
-
-def merge_appointments_by_day(appointments):
-    appointments_by_day = {}
-    for appointment in appointments:
-        date = get_date_from_iso(appointment.get('startTime'))
-        status = appointment.get('appointmentStatus') or appointment.get('status') or 'unknown'
-        status = status.lower()
-
-        if date not in appointments_by_day:
-            appointments_by_day[date] = {'total': 0}
-        appointments_by_day[date]['total'] += 1
-        appointments_by_day[date][status] = appointments_by_day[date].get(status, 0) + 1
-    return appointments_by_day
-
-async def fetch_appointments(session, center, start_date, end_date):
-    """Fetch appointments from one or two calendars for a center"""
-    all_appointments = []
-
-    # Fetch from primary calendar
-    appointments1 = await fetch_appointments_from_calendar(session, center, center.get('calendarId'), start_date, end_date)
-    all_appointments.extend(appointments1)
-
-    # Fetch from secondary calendar if exists
-    if center.get('calendarId2'):
-        appointments2 = await fetch_appointments_from_calendar(session, center, center.get('calendarId2'), start_date, end_date)
-        all_appointments.extend(appointments2)
-
-    appointments_by_day = merge_appointments_by_day(all_appointments)
-
-    return {
-        'centerName': center['centerName'],
-        'city': center['city'],
-        'locationId': center['locationId'],
-        'calendarId': center.get('calendarId'),
-        'calendarId2': center.get('calendarId2'),
-        'appointmentsByDay': appointments_by_day,
-        'totalAppointments': len(all_appointments)
-    }
-
-@st.cache_data(ttl=300)
-def fetch_appointments_for_centers(start_date_str, end_date_str, selected_center_names):
-    from config import CENTERS
-
-    selected_centers = [c for c in CENTERS if c['centerName'] in selected_center_names]
-
-    def create_tasks(session):
-        return [fetch_appointments(session, center, start_date_str, end_date_str) for center in selected_centers]
-
-    results = _execute_async_tasks(create_tasks)
-
-    # --- CUMULATIVE CALCULATION ---
-    for center in results:
-        appointments_by_day = center.get('appointmentsByDay', {})
-        totals = {}
-        total_appointments = 0
-
-        for day_data in appointments_by_day.values():
-            total_appointments += day_data.get('total', 0)
-            for status, count in day_data.items():
-                if status != 'total':
-                    totals[status] = totals.get(status, 0) + count
-
-        center['totals'] = totals
-        center['totalAppointments'] = total_appointments
-
-        # Calculate ratios with your formulas
-        confirmed = totals.get('confirmed', 0)
-        cancelled = totals.get('cancelled', 0)
-        noshow = totals.get('noshow', 0)
-        showed = totals.get('showed', 0)
-
-        if total_appointments > 0:
-            # confirmationRate = (confirmed + showed + noshow) / total
-            confirmed_total = confirmed + showed + noshow
-            confirmation_rate = confirmed_total / total_appointments * 100
-
-            # cancellationRate = cancelled / total
-            cancellation_rate = cancelled / total_appointments * 100
-
-            # noShowRate = noshow / confirmed (if confirmed > 0, else 0)
-            no_show_rate = (noshow / confirmed_total * 100) if confirmed_total > 0 else 0
-
-            # showUpRate = showed / confirmed (if confirmed > 0, else 0)
-            show_up_rate = (showed / confirmed_total * 100) if confirmed_total > 0 else 0
-
-            center['ratios'] = {
-                'confirmationRate': round(confirmation_rate, 2),
-                'cancellationRate': round(cancellation_rate, 2),
-                'noShowRate': round(no_show_rate, 2),
-                'showUpRate': round(show_up_rate, 2)
-            }
-        else:
-            center['ratios'] = {
-                'confirmationRate': 0.0,
-                'cancellationRate': 0.0,
-                'noShowRate': 0.0,
-                'showUpRate': 0.0
-            }
-
-    return results
-
 # META ADS FUNCTIONS
 async def fetch_meta_metrics(session, business_id, access_token, date_start, date_stop):
     """Fetch Meta Ads metrics for a business account"""
@@ -575,6 +450,10 @@ def fetch_combined_performance_data(start_date_str, end_date_str, selected_cente
         cancellation_rate = created_metrics.get('cancellationRateNum', 0)
         no_show_rate = created_metrics.get('noShowRateNum', 0)
 
+        # New HighLevel metrics
+        non_qualifie = created_metrics.get('details', {}).get('nonQualifie', 0)
+        sans_reponse = created_metrics.get('details', {}).get('sansReponse', 0)
+
         # Calculate Cost Per Acquisition (CPA) = spend / concretise (cost per concrétisation)
         cpa = round(spend / concretise, 2) if concretise > 0 else 0
 
@@ -608,6 +487,9 @@ def fetch_combined_performance_data(start_date_str, end_date_str, selected_cente
             'conversion_rate': conversion_rate,
             'cancellation_rate': cancellation_rate,
             'no_show_rate': no_show_rate,
+            # New HighLevel metrics
+            'non_qualifie': non_qualifie,
+            'sans_reponse': sans_reponse,
             # Combined calculations
             'cpa': cpa,  # Cost Per Acquisition (cost per concrétisation)
             'cpl': cpl,  # Cost Per Lead
@@ -644,6 +526,9 @@ def format_combined_data_for_display(combined_data):
             # HighLevel metrics
             'Nb RDV': center['total_created'],
             'Concrétisé': center['concretise'],
+            # New HighLevel metrics
+            'Non Qualifié': center.get('non_qualifie', 0),
+            'Sans Réponse': center.get('sans_reponse', 0),
             # Ratios
             'Taux Confirmation (%)': f"{center['confirmation_rate']:.1f}%",
             'Taux Conversion (%)': f"{center['conversion_rate']:.1f}%",
@@ -658,55 +543,3 @@ def format_combined_data_for_display(combined_data):
         })
 
     return display_data
-
-def get_performance_summary(combined_data):
-    """Get summary statistics for all centers"""
-    if not combined_data:
-        return {}
-
-    # Filter out centers with errors
-    valid_centers = [c for c in combined_data if not c['has_meta_error'] and not c['has_created_error']]
-
-    if not valid_centers:
-        return {'error': 'No valid data available'}
-
-    total_spend = sum(c['spend'] for c in valid_centers)
-    total_meta_leads = sum(c['meta_leads'] for c in valid_centers)
-    total_created = sum(c['total_created'] for c in valid_centers)
-    total_concretise = sum(c['concretise'] for c in valid_centers)
-    total_impressions = sum(c['impressions'] for c in valid_centers)
-    total_clicks = sum(c['inline_link_clicks'] for c in valid_centers)
-    total_video_30s = sum(c['video_30_sec_watched'] for c in valid_centers)
-
-    # Calculate weighted averages for rates
-    total_cpm = sum(c['cpm'] * c['spend'] for c in valid_centers if c['spend'] > 0)
-    total_ctr = sum(c['ctr'] * c['spend'] for c in valid_centers if c['spend'] > 0)
-    total_cpr = sum(c['cpr'] * c['spend'] for c in valid_centers if c['spend'] > 0)
-
-    weighted_cpm = (total_cpm / total_spend) if total_spend > 0 else 0
-    weighted_ctr = (total_ctr / total_spend) if total_spend > 0 else 0
-    weighted_cpr = (total_cpr / total_spend) if total_spend > 0 else 0
-
-    return {
-        'total_centers': len(valid_centers),
-        'total_spend': total_spend,
-        'total_impressions': total_impressions,
-        'total_clicks': total_clicks,
-        'total_video_30s': total_video_30s,
-        'total_meta_leads': total_meta_leads,
-        'total_created': total_created,
-        'total_concretise': total_concretise,
-        'avg_cpa': round(total_spend / total_concretise, 2) if total_concretise > 0 else 0,
-        'avg_cpl': round(total_spend / total_meta_leads, 2) if total_meta_leads > 0 else 0,
-        'avg_cpm': round(weighted_cpm, 2),
-        'avg_ctr': round(weighted_ctr, 2),
-        'avg_cpr': round(weighted_cpr, 2),
-        'overall_hook_rate': round((total_video_30s / total_impressions * 100), 2) if total_impressions > 0 else 0,
-        'overall_meta_conversion_rate': round((total_meta_leads / total_clicks * 100), 2) if total_clicks > 0 else 0,
-        'overall_lead_to_appointment': round((total_created / total_meta_leads * 100), 2) if total_meta_leads > 0 else 0,
-        'overall_lead_to_sale': round((total_concretise / total_meta_leads * 100), 2) if total_meta_leads > 0 else 0,
-        'overall_conversion_rate': round((total_concretise / total_created * 100), 2) if total_created > 0 else 0,
-        'overall_confirmation_rate': round(sum(c['confirmation_rate'] for c in valid_centers) / len(valid_centers), 2) if valid_centers else 0,
-        'overall_cancellation_rate': round(sum(c['cancellation_rate'] for c in valid_centers) / len(valid_centers), 2) if valid_centers else 0,
-        'overall_no_show_rate': round(sum(c['no_show_rate'] for c in valid_centers) / len(valid_centers), 2) if valid_centers else 0
-    }
