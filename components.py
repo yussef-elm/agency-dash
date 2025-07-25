@@ -32,8 +32,7 @@ def create_colored_dataframe(df, metric_columns):
 
     return styled_df
 
-def display_enhanced_benchmark_legend():
-    """Enhanced benchmark legend including Meta Ads metrics with smaller display"""
+def display_benchmark_legend():
     st.markdown("""
     <div style="
         background: linear-gradient(90deg, #f8f9fa, #e9ecef);
@@ -41,53 +40,21 @@ def display_enhanced_benchmark_legend():
         border-radius: 6px;
         padding: 8px 12px;
         margin: 8px 0;
-        font-size: 11px;
+        font-size: 13px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        white-space: nowrap;
+        overflow-x: auto;
     ">
-        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 6px; font-size: 12px;">📊 Performance Benchmarks</div>
-
-        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            <div style="color: #636e72; line-height: 1.2;">
-                <strong>HighLevel:</strong>
-                Confirmation: <span style="color: #00b894;">🟢>60%</span> <span style="color: #fdcb6e;">🟡40-60%</span> <span style="color: #e17055;">🔴<40%</span>
-            </div>
-            <div style="color: #636e72; line-height: 1.2;">
-                Show Up: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡35-50%</span> <span style="color: #e17055;">🔴<35%</span>
-            </div>
-            <div style="color: #636e72; line-height: 1.2;">
-                Conversion: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡30-50%</span> <span style="color: #e17055;">🔴<30%</span>
-            </div>
-        </div>
-
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;">
-            <div style="color: #636e72; line-height: 1.2;">
-                <strong>Meta Ads:</strong>
-                Hook Rate: <span style="color: #00b894;">🟢>15%</span> <span style="color: #fdcb6e;">🟡8-15%</span> <span style="color: #e17055;">🔴<8%</span>
-            </div>
-            <div style="color: #636e72; line-height: 1.2;">
-                CTR: <span style="color: #00b894;">🟢>2%</span> <span style="color: #fdcb6e;">🟡1-2%</span> <span style="color: #e17055;">🔴<1%</span>
-            </div>
-            <div style="color: #636e72; line-height: 1.2;">
-                Meta Conv.: <span style="color: #00b894;">🟢>10%</span> <span style="color: #fdcb6e;">🟡5-10%</span> <span style="color: #e17055;">🔴<5%</span>
-            </div>
-        </div>
-
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;">
-            <div style="color: #636e72; line-height: 1.2;">
-                <strong>Costs:</strong>
-                CPA: <span style="color: #00b894;">🟢<€100</span> <span style="color: #fdcb6e;">🟡€100-200</span> <span style="color: #e17055;">🔴>€200</span>
-            </div>
-            <div style="color: #636e72; line-height: 1.2;">
-                CPL: <span style="color: #00b894;">🟢<€20</span> <span style="color: #fdcb6e;">🟡€20-40</span> <span style="color: #e17055;">🔴>€40</span>
-            </div>
-        </div>
+        <span style="font-weight: 600; color: #2c3e50;">📊 Benchmarks:</span>
+        <span style="margin: 0 12px; color: #636e72;">Confirmation: <span style="color: #00b894;">🟢>60%</span> <span style="color: #fdcb6e;">🟡40-60%</span> <span style="color: #e17055;">🔴<40%</span></span>
+        <span style="margin: 0 12px; color: #636e72;">Show Up: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡35-50%</span> <span style="color: #e17055;">🔴<35%</span></span>
+        <span style="margin: 0 12px; color: #636e72;">Conversion: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡30-50%</span> <span style="color: #e17055;">🔴<30%</span></span>
+        <span style="color: #636e72;">Cancellation: <span style="color: #00b894;">🟢<30%</span> <span style="color: #fdcb6e;">🟡30-40%</span> <span style="color: #e17055;">🔴>40%</span></span>
     </div>
     """, unsafe_allow_html=True)
 
-def display_benchmark_legend():
-    """Original benchmark legend for backward compatibility"""
-    display_enhanced_benchmark_legend()
+
 
 def display_enhanced_kpi_cards(valid_results, meta_data=None):
     """Enhanced KPI cards including Meta Ads metrics with smaller display"""
