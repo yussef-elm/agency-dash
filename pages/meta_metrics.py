@@ -503,3 +503,8 @@ def show(selected_centers, start_date, end_date, access_token):
             st.markdown(f"**Overall Hook Rate:** {overall_hook_rate:.2f}%")
             st.markdown(f"**Overall Conversion Rate:** {overall_conv_rate:.2f}%")
             st.markdown(f"**Overall CPL:** €{overall_cpl:.2f}")
+
+    # Show raw JSON response for debugging / transparency
+    st.markdown("---")
+    st.subheader("🗂️ Raw Meta Ads JSON Data (for debugging)")
+    st.expander("Show raw JSON data", expanded=False).json(results)

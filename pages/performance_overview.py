@@ -123,7 +123,7 @@ def show(selected_centers, start_date, end_date, access_token=None):
                 st.markdown("#### 📋 Detailed Performance Table")
                 display_data = format_combined_data_for_display(combined_data)
 
-                # --- Ensure all columns are present, including Sans Réponse and Non Qualifié ---
+                # --- Ensure all columns are present, including sans_reponse and non_qualifie ---
                 expected_columns = {
                     'Centre': '',
                     'Ville': '',
@@ -135,7 +135,7 @@ def show(selected_centers, start_date, end_date, access_token=None):
                     'Leads Meta': 0,
                     'Concrétisé': 0,
                     'Impressions': 0,
-                    'Clics': 0,  # Changed from 'Clicks' to 'Clics' to match display data keys
+                    'Clicks': 0,
                     'Video 30s Views': 0,
                     'Hook Rate (%)': 0.0,
                     'Meta Conv. Rate (%)': 0.0,
@@ -157,7 +157,7 @@ def show(selected_centers, start_date, end_date, access_token=None):
                     display_df[col] = display_df[col].apply(format_currency)
                 for col in ['Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)', 'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)']:
                     display_df[col] = display_df[col].apply(format_percentage)
-                for col in ['Impressions', 'Clics', 'Video 30s Views', 'Leads Meta', 'Concrétisé', 'Sans Réponse', 'Non Qualifié']:
+                for col in ['Impressions', 'Clicks', 'Video 30s Views', 'Leads Meta', 'Concrétisé', 'Sans Réponse', 'Non Qualifié']:
                     display_df[col] = display_df[col].apply(format_number)
 
                 # Create tabs for different views of the data
@@ -230,7 +230,7 @@ def show(selected_centers, start_date, end_date, access_token=None):
                             st.markdown("---")
 
                 # Performance insights
-                if 'error' not in summary and summary.get('total_centers', 0) > 1:
+                if 'error' not in summary and summary['total_centers'] > 1:
                     st.markdown("#### 💡 Performance Insights")
 
                     # Find best and worst performers
