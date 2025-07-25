@@ -211,8 +211,8 @@ def display_detailed_metrics_table(valid_results):
             "Concrétisé": r['metrics']['details']['concretise'],
             "Non Confirmé": r['metrics']['details']['nonConfirme'],
             # Add new stage details if available
-            "Non Qualifié": r['metrics']['details'].get('nonQualifie', 0),
-            "Sans Réponse": r['metrics']['details'].get('sansReponse', 0)
+            "Non Qualifié": r['metrics']['details']['nonQualifie'],
+            "Sans Réponse": r['metrics']['details']['sansReponse']
         }
         detailed_data.append(row)
 
