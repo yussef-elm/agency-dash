@@ -398,20 +398,21 @@ async def fetch_meta_metrics(session, business_id, access_token, date_start, dat
             cpm = float(insights.get("cpm", 0))
             ctr = float(insights.get("ctr", 0))
             impressions = int(insights.get("impressions", 0))
-            inline_link_clicks = 0
             video_30_sec_watched = 0
+
+            # Use inline_link_clicks field directly if present
+            inline_link_clicks = int(insights.get("inline_link_clicks", 0))
 
             # Extract leads from conversions (priority)
             for conv in insights.get("conversions", []):
                 if conv.get("action_type") == "schedule_total":
                     leads += int(conv.get("value", 0))
 
-            # Extract from actions if no leads found in conversions
-            for act in insights.get("actions", []):
-                if act.get("action_type") == "lead" and leads == 0:
-                    leads += int(act.get("value", 0))
-                if act.get("action_type") == "inline_link_click":
-                    inline_link_clicks += int(act.get("value", 0))
+            # If inline_link_clicks is zero, fallback to summing 'link_click' from actions
+            if inline_link_clicks == 0:
+                for act in insights.get("actions", []):
+                    if act.get("action_type") == "link_click":
+                        inline_link_clicks += int(act.get("value", 0))
 
             # Extract 30s video views from video_30_sec_watched_actions if available
             if "video_30_sec_watched_actions" in insights:
@@ -457,7 +458,7 @@ async def fetch_meta_metrics(session, business_id, access_token, date_start, dat
             "conversion_rate": 0.0,
             "error": str(e)
         }
-
+    
 async def get_center_meta_stats(session, center, access_token, start_date_str, end_date_str):
     """Get Meta Ads statistics for a single center"""
     try:
@@ -535,62 +536,48 @@ def fetch_meta_metrics_for_centers(start_date_str, end_date_str, selected_center
 
 @st.cache_data(ttl=300)
 def fetch_combined_performance_data(start_date_str, end_date_str, selected_center_names, access_token):
-    """Fetch combined data: HighLevel created leads + Meta Ads metrics for CPA calculation"""
-    # Get created leads data (for conversion rates)
     created_data = fetch_centers_data_created(start_date_str, end_date_str, selected_center_names)
 
-    # Get Meta Ads data
     meta_data = fetch_meta_metrics_for_centers(start_date_str, end_date_str, selected_center_names, access_token)
 
-    # Combine the data
+    meta_data_dict = {m['centerName'].strip().lower(): m for m in meta_data}
     combined_results = []
 
     for created_center in created_data:
         center_name = created_center['centerName']
+        center_key = center_name.strip().lower()
+        meta_center = meta_data_dict.get(center_key, None)
 
-        # Find matching Meta data
-        meta_center = next((m for m in meta_data if m['centerName'] == center_name), None)
-
-        # Extract metrics
         created_metrics = created_center.get('metrics', {})
         meta_metrics = meta_center['metrics'] if meta_center else {}
 
-        # Get key values
-        spend = meta_metrics.get('spend', 0)
-        meta_leads = meta_metrics.get('leads', 0)
-        cpr = meta_metrics.get('cpr', 0)
-        cpm = meta_metrics.get('cpm', 0)
-        ctr = meta_metrics.get('ctr', 0)
-        impressions = meta_metrics.get('impressions', 0)
-        inline_link_clicks = meta_metrics.get('inline_link_clicks', 0)
-        video_30_sec_watched = meta_metrics.get('video_30_sec_watched', 0)
-        hook_rate = meta_metrics.get('hook_rate', 0)
-        meta_conversion_rate = meta_metrics.get('conversion_rate', 0)
+        # Convert to proper types
+        spend = float(meta_metrics.get('spend', 0))
+        meta_leads = int(meta_metrics.get('leads', 0))
+        cpr = float(meta_metrics.get('cpr', 0))
+        cpm = float(meta_metrics.get('cpm', 0))
+        ctr = float(meta_metrics.get('ctr', 0))
+        impressions = int(meta_metrics.get('impressions', 0))
+        inline_link_clicks = int(meta_metrics.get('inline_link_clicks', 0))
+        video_30_sec_watched = int(meta_metrics.get('video_30_sec_watched', 0))
+        hook_rate = float(meta_metrics.get('hook_rate', 0))
+        meta_conversion_rate = float(meta_metrics.get('conversion_rate', 0))
 
-        # HighLevel metrics
-        concretise = created_metrics.get('details', {}).get('concretise', 0)
-        total_created = created_metrics.get('totalRDVPlanifies', 0)
-        confirmation_rate = created_metrics.get('confirmationRateNum', 0)
-        conversion_rate = created_metrics.get('conversionRateNum', 0)
-        cancellation_rate = created_metrics.get('cancellationRateNum', 0)
-        no_show_rate = created_metrics.get('noShowRateNum', 0)
+        concretise = int(created_metrics.get('details', {}).get('concretise', 0))
+        total_created = int(created_metrics.get('totalRDVPlanifies', 0))
+        confirmation_rate = float(created_metrics.get('confirmationRateNum', 0))
+        conversion_rate = float(created_metrics.get('conversionRateNum', 0))
+        cancellation_rate = float(created_metrics.get('cancellationRateNum', 0))
+        no_show_rate = float(created_metrics.get('noShowRateNum', 0))
 
-        # Calculate Cost Per Acquisition (CPA) = spend / concretise (cost per concrétisation)
         cpa = round(spend / concretise, 2) if concretise > 0 else 0
-
-        # Calculate Cost Per Lead (CPL) = spend / meta_leads
         cpl = round(spend / meta_leads, 2) if meta_leads > 0 else 0
-
-        # Calculate Lead to Sale Conversion Rate = concretise / meta_leads
         lead_to_sale_rate = round((concretise / meta_leads * 100), 2) if meta_leads > 0 else 0
-
-        # Calculate Lead to Appointment Rate = total_created / meta_leads
         lead_to_appointment_rate = round((total_created / meta_leads * 100), 2) if meta_leads > 0 else 0
 
         combined_results.append({
             'centerName': center_name,
             'city': created_center['city'],
-            # Meta metrics
             'meta_leads': meta_leads,
             'spend': spend,
             'cpm': cpm,
@@ -601,19 +588,16 @@ def fetch_combined_performance_data(start_date_str, end_date_str, selected_cente
             'video_30_sec_watched': video_30_sec_watched,
             'hook_rate': hook_rate,
             'meta_conversion_rate': meta_conversion_rate,
-            # HighLevel metrics
             'total_created': total_created,
             'concretise': concretise,
             'confirmation_rate': confirmation_rate,
             'conversion_rate': conversion_rate,
             'cancellation_rate': cancellation_rate,
             'no_show_rate': no_show_rate,
-            # Combined calculations
-            'cpa': cpa,  # Cost Per Acquisition (cost per concrétisation)
-            'cpl': cpl,  # Cost Per Lead
-            'lead_to_sale_rate': lead_to_sale_rate,  # Lead to Sale %
-            'lead_to_appointment_rate': lead_to_appointment_rate,  # Lead to Appointment %
-            # Error flags
+            'cpa': cpa,
+            'cpl': cpl,
+            'lead_to_sale_rate': lead_to_sale_rate,
+            'lead_to_appointment_rate': lead_to_appointment_rate,
             'has_meta_error': 'error' in meta_metrics,
             'has_created_error': 'error' in created_center,
             'meta_error': meta_metrics.get('error', ''),
@@ -621,74 +605,102 @@ def fetch_combined_performance_data(start_date_str, end_date_str, selected_cente
         })
 
     return combined_results
-
 def format_combined_data_for_display(combined_data):
-    """Format combined data for display in Streamlit tables"""
+    """Format combined data for display in Streamlit tables - returns raw numbers, no string formatting"""
     display_data = []
 
+    def safe_float(val, default=0.0):
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return default
+
+    def safe_int(val, default=0):
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            return default
+
     for center in combined_data:
-        display_data.append({
-            'Centre': center['centerName'],
-            'Ville': center['city'],
-            # Meta Ads metrics
-            'Impressions': f"{center['impressions']:,}",
-            'Clics': center['inline_link_clicks'],
-            'Leads Meta': center['meta_leads'],
-            'Vues 30s': center['video_30_sec_watched'],
-            'Hook Rate (%)': f"{center['hook_rate']:.2f}%",
-            'Meta Conv. Rate (%)': f"{center['meta_conversion_rate']:.2f}%",
-            'CPR (€)': f"{center['cpr']:.2f}",
-            'CPM (€)': f"{center['cpm']:.2f}",
-            'CTR (%)': f"{center['ctr']:.2f}%",
-            'Dépense (€)': f"{center['spend']:.2f}",
-            # HighLevel metrics
-            'Nb RDV': center['total_created'],
-            'Concrétisé': center['concretise'],
-            # Ratios
-            'Taux Confirmation (%)': f"{center['confirmation_rate']:.1f}%",
-            'Taux Conversion (%)': f"{center['conversion_rate']:.1f}%",
-            'Taux Annulation (%)': f"{center['cancellation_rate']:.1f}%",
-            'Taux No-Show (%)': f"{center['no_show_rate']:.1f}%",
-            # Cost metrics
-            'CPL (€)': f"{center['cpl']:.2f}",
-            'CPA - Coût/Concrétisation (€)': f"{center['cpa']:.2f}",
-            # Conversion rates
-            'Lead→RDV (%)': f"{center['lead_to_appointment_rate']:.2f}%",
-            'Lead→Sale (%)': f"{center['lead_to_sale_rate']:.2f}%"
-        })
+
+        formatted = {
+            'Centre': center.get('centerName', ''),
+            'Ville': center.get('city', ''),
+            'Impressions': safe_int(center.get('impressions')),
+            'Clics': safe_int(center.get('inline_link_clicks')),
+            'Leads Meta': safe_int(center.get('meta_leads')),
+            'Vues 30s': safe_int(center.get('video_30_sec_watched')),
+            'Hook Rate (%)': safe_float(center.get('hook_rate')),
+            'Meta Conv. Rate (%)': safe_float(center.get('meta_conversion_rate')),
+            'CPR (€)': safe_float(center.get('cpr')),
+            'CPM (€)': safe_float(center.get('cpm')),
+            'CTR (%)': safe_float(center.get('ctr')),
+            'Dépense (€)': safe_float(center.get('spend')),
+            'Nb RDV': safe_int(center.get('total_created')),
+            'Concrétisé': safe_int(center.get('concretise')),
+            'Taux Confirmation (%)': safe_float(center.get('confirmation_rate')),
+            'Taux Conversion (%)': safe_float(center.get('conversion_rate')),
+            'Taux Annulation (%)': safe_float(center.get('cancellation_rate')),
+            'Taux No-Show (%)': safe_float(center.get('no_show_rate')),
+            'CPL (€)': safe_float(center.get('cpl')),
+            'CPA - Coût/Concrétisation (€)': safe_float(center.get('cpa')),
+            'Lead→RDV (%)': safe_float(center.get('lead_to_appointment_rate')),
+            'Lead→Sale (%)': safe_float(center.get('lead_to_sale_rate'))
+        }
+
+        print(f"  Formatted data (raw): {formatted}")
+        display_data.append(formatted)
 
     return display_data
+
 
 def get_performance_summary(combined_data):
     """Get summary statistics for all centers"""
     if not combined_data:
+        print("[DEBUG] No combined data provided.")
         return {}
 
-    # Filter out centers with errors
-    valid_centers = [c for c in combined_data if not c['has_meta_error'] and not c['has_created_error']]
+    valid_centers = [c for c in combined_data if not c.get('has_meta_error') and not c.get('has_created_error')]
 
     if not valid_centers:
+        print("[DEBUG] No valid centers after filtering errors.")
         return {'error': 'No valid data available'}
 
-    total_spend = sum(c['spend'] for c in valid_centers)
-    total_meta_leads = sum(c['meta_leads'] for c in valid_centers)
-    total_created = sum(c['total_created'] for c in valid_centers)
-    total_concretise = sum(c['concretise'] for c in valid_centers)
-    total_impressions = sum(c['impressions'] for c in valid_centers)
-    total_clicks = sum(c['inline_link_clicks'] for c in valid_centers)
-    total_video_30s = sum(c['video_30_sec_watched'] for c in valid_centers)
+    def safe_float(val, default=0.0):
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return default
 
-    # Calculate weighted averages for rates
-    total_cpm = sum(c['cpm'] * c['spend'] for c in valid_centers if c['spend'] > 0)
-    total_ctr = sum(c['ctr'] * c['spend'] for c in valid_centers if c['spend'] > 0)
-    total_cpr = sum(c['cpr'] * c['spend'] for c in valid_centers if c['spend'] > 0)
+    def safe_sum(key):
+        s = sum(safe_float(c.get(key, 0)) for c in valid_centers)
+        return s
+
+    total_spend = safe_sum('spend')
+    total_meta_leads = safe_sum('meta_leads')
+    total_created = safe_sum('total_created')
+    total_concretise = safe_sum('concretise')
+    total_impressions = safe_sum('impressions')
+    total_clicks = safe_sum('inline_link_clicks')
+    total_video_30s = safe_sum('video_30_sec_watched')
+
+    total_cpm = sum(safe_float(c.get('cpm', 0)) * safe_float(c.get('spend', 0)) for c in valid_centers if safe_float(c.get('spend', 0)) > 0)
+    total_ctr = sum(safe_float(c.get('ctr', 0)) * safe_float(c.get('spend', 0)) for c in valid_centers if safe_float(c.get('spend', 0)) > 0)
+    total_cpr = sum(safe_float(c.get('cpr', 0)) * safe_float(c.get('spend', 0)) for c in valid_centers if safe_float(c.get('spend', 0)) > 0)
 
     weighted_cpm = (total_cpm / total_spend) if total_spend > 0 else 0
     weighted_ctr = (total_ctr / total_spend) if total_spend > 0 else 0
     weighted_cpr = (total_cpr / total_spend) if total_spend > 0 else 0
 
-    return {
-        'total_centers': len(valid_centers),
+
+    n = len(valid_centers)
+    avg_confirmation_rate = round(sum(safe_float(c.get('confirmation_rate')) for c in valid_centers) / n, 2) if n else 0
+    avg_cancellation_rate = round(sum(safe_float(c.get('cancellation_rate')) for c in valid_centers) / n, 2) if n else 0
+    avg_no_show_rate = round(sum(safe_float(c.get('no_show_rate')) for c in valid_centers) / n, 2) if n else 0
+
+
+    summary = {
+        'total_centers': n,
         'total_spend': total_spend,
         'total_impressions': total_impressions,
         'total_clicks': total_clicks,
@@ -706,7 +718,9 @@ def get_performance_summary(combined_data):
         'overall_lead_to_appointment': round((total_created / total_meta_leads * 100), 2) if total_meta_leads > 0 else 0,
         'overall_lead_to_sale': round((total_concretise / total_meta_leads * 100), 2) if total_meta_leads > 0 else 0,
         'overall_conversion_rate': round((total_concretise / total_created * 100), 2) if total_created > 0 else 0,
-        'overall_confirmation_rate': round(sum(c['confirmation_rate'] for c in valid_centers) / len(valid_centers), 2) if valid_centers else 0,
-        'overall_cancellation_rate': round(sum(c['cancellation_rate'] for c in valid_centers) / len(valid_centers), 2) if valid_centers else 0,
-        'overall_no_show_rate': round(sum(c['no_show_rate'] for c in valid_centers) / len(valid_centers), 2) if valid_centers else 0
+        'overall_confirmation_rate': avg_confirmation_rate,
+        'overall_cancellation_rate': avg_cancellation_rate,
+        'overall_no_show_rate': avg_no_show_rate
     }
+
+    return summary

@@ -123,7 +123,7 @@ def show(selected_centers, start_date, end_date, access_token=None):
                 st.markdown("#### 📋 Detailed Performance Table")
                 display_data = format_combined_data_for_display(combined_data)
 
-                # --- Ensure all columns are present, including sans_reponse and non_qualifie ---
+                # --- Ensure all columns are present, including those needed for display ---
                 expected_columns = {
                     'Centre': '',
                     'Ville': '',
@@ -135,8 +135,8 @@ def show(selected_centers, start_date, end_date, access_token=None):
                     'Leads Meta': 0,
                     'Concrétisé': 0,
                     'Impressions': 0,
-                    'Clicks': 0,
-                    'Video 30s Views': 0,
+                    'Clics': 0,
+                    'Vues 30s': 0,
                     'Hook Rate (%)': 0.0,
                     'Meta Conv. Rate (%)': 0.0,
                     'CTR (%)': 0.0,
@@ -144,8 +144,9 @@ def show(selected_centers, start_date, end_date, access_token=None):
                     'Lead→Sale (%)': 0.0,
                     'Taux Confirmation (%)': 0.0,
                     'Taux Conversion (%)': 0.0,
-                    'Sans Réponse': 0,
-                    'Non Qualifié': 0
+                    'Taux Annulation (%)': 0.0,
+                    'Taux No-Show (%)': 0.0,
+                    'Nb RDV': 0
                 }
                 # Convert to DataFrame and ensure all columns
                 df = pd.DataFrame(display_data)
@@ -155,9 +156,9 @@ def show(selected_centers, start_date, end_date, access_token=None):
                 display_df = df.copy()
                 for col in ['Dépense (€)', 'CPL (€)', 'CPA - Coût/Concrétisation (€)', 'CPR (€)', 'CPM (€)']:
                     display_df[col] = display_df[col].apply(format_currency)
-                for col in ['Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)', 'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)']:
+                for col in ['Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)', 'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)', 'Taux Annulation (%)', 'Taux No-Show (%)']:
                     display_df[col] = display_df[col].apply(format_percentage)
-                for col in ['Impressions', 'Clicks', 'Video 30s Views', 'Leads Meta', 'Concrétisé', 'Sans Réponse', 'Non Qualifié']:
+                for col in ['Impressions', 'Clics', 'Vues 30s', 'Leads Meta', 'Concrétisé', 'Nb RDV']:
                     display_df[col] = display_df[col].apply(format_number)
 
                 # Create tabs for different views of the data
@@ -175,13 +176,13 @@ def show(selected_centers, start_date, end_date, access_token=None):
                 with tab2:
                     # Cost-focused view
                     cost_columns = ['Centre', 'Ville', 'Dépense (€)', 'CPL (€)', 'CPA - Coût/Concrétisation (€)', 
-                                  'CPR (€)', 'CPM (€)', 'Leads Meta', 'Concrétisé', 'Sans Réponse', 'Non Qualifié']
+                                  'CPR (€)', 'CPM (€)', 'Leads Meta', 'Concrétisé']
                     st.dataframe(display_df[cost_columns], use_container_width=True, hide_index=True)
 
                 with tab3:
                     # Conversion-focused view
                     conv_columns = ['Centre', 'Ville', 'Hook Rate (%)', 'Meta Conv. Rate (%)', 'CTR (%)',
-                                  'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)', 'Sans Réponse', 'Non Qualifié']
+                                  'Lead→RDV (%)', 'Lead→Sale (%)', 'Taux Confirmation (%)', 'Taux Conversion (%)']
                     st.dataframe(display_df[conv_columns], use_container_width=True, hide_index=True)
 
                 # Enhanced download options

@@ -58,11 +58,6 @@ def create_all_centers_table(df):
     # Ensure all columns exist
     df = ensure_all_columns(df)
 
-    # Debug info (remove in production)
-    st.write("🔍 **Debug Info:**")
-    st.write(f"DataFrame shape: {df.shape}")
-    st.write(f"Columns: {list(df.columns)}")
-
     # Create display copy
     display_df = df.copy()
 

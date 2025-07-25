@@ -106,7 +106,7 @@ def get_color_class(value, metric_type):
     else:
         return 'cell-neutral'
 
-def create_metric_card(title, value, metric_type, delta=None):
+def create_metric_card(title, value, metric_type, delta=None, small=False):
     """Create a colored metric card based on performance"""
     color = get_metric_color(value, metric_type)
 
