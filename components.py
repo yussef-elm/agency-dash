@@ -1,6 +1,3 @@
-"""
-Enhanced UI components for the dashboard including colored tables with Meta Ads metrics
-"""
 import streamlit as st
 import pandas as pd
 from utils import get_color_class, create_metric_card
@@ -36,52 +33,52 @@ def create_colored_dataframe(df, metric_columns):
     return styled_df
 
 def display_enhanced_benchmark_legend():
-    """Enhanced benchmark legend including Meta Ads metrics"""
+    """Enhanced benchmark legend including Meta Ads metrics with smaller display"""
     st.markdown("""
     <div style="
         background: linear-gradient(90deg, #f8f9fa, #e9ecef);
         border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin: 12px 0;
-        font-size: 13px;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 11px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     ">
-        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 8px;">📊 Performance Benchmarks</div>
+        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 6px; font-size: 12px;">📊 Performance Benchmarks</div>
 
-        <div style="display: flex; flex-wrap: wrap; gap: 16px;">
-            <div style="color: #636e72;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div style="color: #636e72; line-height: 1.2;">
                 <strong>HighLevel:</strong>
                 Confirmation: <span style="color: #00b894;">🟢>60%</span> <span style="color: #fdcb6e;">🟡40-60%</span> <span style="color: #e17055;">🔴<40%</span>
             </div>
-            <div style="color: #636e72;">
+            <div style="color: #636e72; line-height: 1.2;">
                 Show Up: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡35-50%</span> <span style="color: #e17055;">🔴<35%</span>
             </div>
-            <div style="color: #636e72;">
+            <div style="color: #636e72; line-height: 1.2;">
                 Conversion: <span style="color: #00b894;">🟢>50%</span> <span style="color: #fdcb6e;">🟡30-50%</span> <span style="color: #e17055;">🔴<30%</span>
             </div>
         </div>
 
-        <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px;">
-            <div style="color: #636e72;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;">
+            <div style="color: #636e72; line-height: 1.2;">
                 <strong>Meta Ads:</strong>
                 Hook Rate: <span style="color: #00b894;">🟢>15%</span> <span style="color: #fdcb6e;">🟡8-15%</span> <span style="color: #e17055;">🔴<8%</span>
             </div>
-            <div style="color: #636e72;">
+            <div style="color: #636e72; line-height: 1.2;">
                 CTR: <span style="color: #00b894;">🟢>2%</span> <span style="color: #fdcb6e;">🟡1-2%</span> <span style="color: #e17055;">🔴<1%</span>
             </div>
-            <div style="color: #636e72;">
+            <div style="color: #636e72; line-height: 1.2;">
                 Meta Conv.: <span style="color: #00b894;">🟢>10%</span> <span style="color: #fdcb6e;">🟡5-10%</span> <span style="color: #e17055;">🔴<5%</span>
             </div>
         </div>
 
-        <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px;">
-            <div style="color: #636e72;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;">
+            <div style="color: #636e72; line-height: 1.2;">
                 <strong>Costs:</strong>
                 CPA: <span style="color: #00b894;">🟢<€100</span> <span style="color: #fdcb6e;">🟡€100-200</span> <span style="color: #e17055;">🔴>€200</span>
             </div>
-            <div style="color: #636e72;">
+            <div style="color: #636e72; line-height: 1.2;">
                 CPL: <span style="color: #00b894;">🟢<€20</span> <span style="color: #fdcb6e;">🟡€20-40</span> <span style="color: #e17055;">🔴>€40</span>
             </div>
         </div>
@@ -93,7 +90,7 @@ def display_benchmark_legend():
     display_enhanced_benchmark_legend()
 
 def display_enhanced_kpi_cards(valid_results, meta_data=None):
-    """Enhanced KPI cards including Meta Ads metrics"""
+    """Enhanced KPI cards including Meta Ads metrics with smaller display"""
     # HighLevel metrics
     total_rdv = sum([r['metrics']['totalRDVPlanifies'] for r in valid_results])
     total_confirmed = sum([r['metrics']['rdvConfirmes'] for r in valid_results])
@@ -114,51 +111,51 @@ def display_enhanced_kpi_cards(valid_results, meta_data=None):
         avg_cpa = sum([m.get('cpa', 0) for m in meta_data if m.get('cpa', 0) > 0]) / len([m for m in meta_data if m.get('cpa', 0) > 0]) if any(m.get('cpa', 0) > 0 for m in meta_data) else 0
         avg_cpl = sum([m.get('cpl', 0) for m in meta_data if m.get('cpl', 0) > 0]) / len([m for m in meta_data if m.get('cpl', 0) > 0]) if any(m.get('cpl', 0) > 0 for m in meta_data) else 0
 
-        # Display enhanced cards with Meta metrics
-        st.markdown("#### 🏢 HighLevel Performance")
+        # Display enhanced cards with Meta metrics with smaller font and padding
+        st.markdown("#### 🏢 HighLevel Performance", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.markdown(create_metric_card("Total RDV", f"{total_rdv:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Total RDV", f"{total_rdv:,}", "volume", small=True), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card("Confirmed", f"{total_confirmed:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Confirmed", f"{total_confirmed:,}", "volume", small=True), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card("Show Up", f"{total_showup:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Show Up", f"{total_showup:,}", "volume", small=True), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card("Avg Conversion", f"{avg_conversion:.1f}%", "conversion"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Avg Conversion", f"{avg_conversion:.1f}%", "conversion", small=True), unsafe_allow_html=True)
 
-        st.markdown("#### 📱 Meta Ads Performance")
+        st.markdown("#### 📱 Meta Ads Performance", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.markdown(create_metric_card("Total Impressions", f"{total_impressions:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Total Impressions", f"{total_impressions:,}", "volume", small=True), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card("Meta Leads", f"{total_meta_leads:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Meta Leads", f"{total_meta_leads:,}", "volume", small=True), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card("Hook Rate", f"{avg_hook_rate:.1f}%", "hook_rate"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Hook Rate", f"{avg_hook_rate:.1f}%", "hook_rate", small=True), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card("Meta Conv.", f"{avg_meta_conv:.1f}%", "meta_conversion"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Meta Conv.", f"{avg_meta_conv:.1f}%", "meta_conversion", small=True), unsafe_allow_html=True)
 
-        st.markdown("#### 💰 Cost Performance")
+        st.markdown("#### 💰 Cost Performance", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.markdown(create_metric_card("Total Spend", f"€{total_spend:,.0f}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Total Spend", f"€{total_spend:,.0f}", "volume", small=True), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card("Avg CPA", f"€{avg_cpa:.0f}", "cpa"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Avg CPA", f"€{avg_cpa:.0f}", "cpa", small=True), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card("Avg CPL", f"€{avg_cpl:.0f}", "cpl"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Avg CPL", f"€{avg_cpl:.0f}", "cpl", small=True), unsafe_allow_html=True)
         with col4:
             lead_to_sale = (total_showup / total_meta_leads * 100) if total_meta_leads > 0 else 0
-            st.markdown(create_metric_card("Lead→Sale", f"{lead_to_sale:.1f}%", "conversion"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Lead→Sale", f"{lead_to_sale:.1f}%", "conversion", small=True), unsafe_allow_html=True)
     else:
-        # Original KPI cards for HighLevel only
+        # Original KPI cards for HighLevel only with smaller display
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.markdown(create_metric_card("Total RDV", f"{total_rdv:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Total RDV", f"{total_rdv:,}", "volume", small=True), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card("Confirmed", f"{total_confirmed:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Confirmed", f"{total_confirmed:,}", "volume", small=True), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card("Show Up", f"{total_showup:,}", "volume"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Show Up", f"{total_showup:,}", "volume", small=True), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card("Avg Conversion", f"{avg_conversion:.1f}%", "conversion"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Avg Conversion", f"{avg_conversion:.1f}%", "conversion", small=True), unsafe_allow_html=True)
 
 def display_kpi_cards(valid_results):
     """Original KPI cards function for backward compatibility"""
@@ -326,18 +323,18 @@ def display_benchmark_analysis_cards(valid_results):
         metrics = r['metrics']
 
         with col1:
-            st.markdown(create_metric_card("Confirmation", metrics['tauxConfirmation'], "confirmation"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Confirmation", metrics['tauxConfirmation'], "confirmation", small=True), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card("Show Up", metrics['tauxPresence'], "show_up"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Show Up", metrics['tauxPresence'], "show_up", small=True), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card("Conversion", metrics['tauxConversion'], "conversion"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Conversion", metrics['tauxConversion'], "conversion", small=True), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card("Cancellation", metrics['tauxAnnulation'], "cancellation"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Cancellation", metrics['tauxAnnulation'], "cancellation", small=True), unsafe_allow_html=True)
         with col5:
-            st.markdown(create_metric_card("No Show", metrics['tauxNoShow'], "no-show"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("No Show", metrics['tauxNoShow'], "no-show", small=True), unsafe_allow_html=True)
 
 def display_enhanced_benchmark_analysis_cards(valid_results, meta_data=None):
-    """Enhanced benchmark analysis including Meta Ads metrics"""
+    """Enhanced benchmark analysis including Meta Ads metrics with smaller display"""
     for i, r in enumerate(valid_results):
         st.subheader(f"🏢 {r['centerName']} - {r['city']}")
 
@@ -347,15 +344,15 @@ def display_enhanced_benchmark_analysis_cards(valid_results, meta_data=None):
         metrics = r['metrics']
 
         with col1:
-            st.markdown(create_metric_card("Confirmation", metrics['tauxConfirmation'], "confirmation"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Confirmation", metrics['tauxConfirmation'], "confirmation", small=True), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card("Show Up", metrics['tauxPresence'], "show_up"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Show Up", metrics['tauxPresence'], "show_up", small=True), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card("Conversion", metrics['tauxConversion'], "conversion"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Conversion", metrics['tauxConversion'], "conversion", small=True), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card("Cancellation", metrics['tauxAnnulation'], "cancellation"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("Cancellation", metrics['tauxAnnulation'], "cancellation", small=True), unsafe_allow_html=True)
         with col5:
-            st.markdown(create_metric_card("No Show", metrics['tauxNoShow'], "no-show"), unsafe_allow_html=True)
+            st.markdown(create_metric_card("No Show", metrics['tauxNoShow'], "no-show", small=True), unsafe_allow_html=True)
 
         # Meta Ads metrics (if available)
         if meta_data and i < len(meta_data):
@@ -366,19 +363,19 @@ def display_enhanced_benchmark_analysis_cards(valid_results, meta_data=None):
 
                 with col1:
                     hook_rate = f"{meta_metrics.get('hook_rate', 0):.1f}%"
-                    st.markdown(create_metric_card("Hook Rate", hook_rate, "hook_rate"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("Hook Rate", hook_rate, "hook_rate", small=True), unsafe_allow_html=True)
                 with col2:
                     meta_conv = f"{meta_metrics.get('conversion_rate', 0):.1f}%"
-                    st.markdown(create_metric_card("Meta Conv.", meta_conv, "meta_conversion"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("Meta Conv.", meta_conv, "meta_conversion", small=True), unsafe_allow_html=True)
                 with col3:
                     ctr = f"{meta_metrics.get('ctr', 0):.2f}%"
-                    st.markdown(create_metric_card("CTR", ctr, "ctr"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("CTR", ctr, "ctr", small=True), unsafe_allow_html=True)
                 with col4:
                     cpl = f"€{meta_metrics.get('cpr', 0):.0f}"  # Using CPR as CPL equivalent
-                    st.markdown(create_metric_card("CPL", cpl, "cpl"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("CPL", cpl, "cpl", small=True), unsafe_allow_html=True)
                 with col5:
                     spend = f"€{meta_metrics.get('spend', 0):.0f}"
-                    st.markdown(create_metric_card("Spend", spend, "volume"), unsafe_allow_html=True)
+                    st.markdown(create_metric_card("Spend", spend, "volume", small=True), unsafe_allow_html=True)
 
         st.markdown("---")
 
