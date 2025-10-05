@@ -122,6 +122,15 @@ CENTERS = [
         "pipelineName": "Nouveau Pipeline",
         "calendarId": "tCKnA5IyUJ6m4V7kgGFq",
         "businessId": "act_2961653874016169"
+    },
+        {
+        "apiKey": st.secrets["BLOOM_API_KEY"],
+        "locationId": "Rz2iTJ7i6YDKDgRE5vxk",
+        "city": "Casablanca",
+        "centerName": "Bloom Clinic",
+        "pipelineName": "Lp Calendar Pipeline",
+        "calendarId": "iW0Nuq4XNVu7AOCsDKLF",
+        "businessId": "act_1180242759663330"
     }
 ]
 
